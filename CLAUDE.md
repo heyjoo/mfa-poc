@@ -1,88 +1,46 @@
-# CLAUDE.md
+# MFA PoC
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+- Phase 1 `module-federation/` — Vite + `@originjs/vite-plugin-federation` + pnpm workspace ✅
+- Phase 2 — Import Map (planned)
 
-## Overview
+## Module Federation
 
-This is a Micro Frontend Architecture (MFA) proof-of-concept repository. It explores different MFA approaches in separate phases:
+| App | Port | Role |
+|-----|------|------|
+| `shell` | 3000 | Host — react-router-dom, Header |
+| `remote-dashboard` | 3002 | exposes `./Dashboard` |
+| `remote-about` | 3003 | exposes `./About` |
 
-- **Phase 1 (`module-federation/`)** — Vite + `@originjs/vite-plugin-federation` + pnpm workspace (complete)
-- **Phase 2** — Import Map approach (planned)
-
-## Phase 1: Module Federation
+Routes: `/` (Dashboard + About) · `/dashboard` · `/about`
 
 ### Commands
 
 ```bash
 cd module-federation
-
-# Install dependencies
 pnpm install
-
-# Run everything (build remotes → preview remotes → dev shell)
-pnpm start
-
-# Or step by step:
-pnpm build:remotes      # Build remote-dashboard and remote-about
-pnpm preview:remotes    # Serve remotes at :3002 and :3003
-pnpm dev:shell          # Dev server for shell at :3000
-
-# Build individual packages
-pnpm -F remote-dashboard build
-pnpm -F remote-about build
-pnpm -F shell build
+pnpm start                        # build:remotes → preview:remotes → dev:shell
+pnpm -F <package> build|preview   # e.g. pnpm -F shell build
 ```
 
-### Architecture
+### Constraints
 
-The monorepo has three Vite+React+TypeScript apps managed via pnpm workspace:
+**`main.tsx` — dynamic import 유지, static import으로 변경 금지:**
+`import('./bootstrap')` 는 MF 공유 모듈 협상이 완료된 후 React를 기동시킴. static import으로 변경 시 React 인스턴스 중복 → hooks 오류.
 
-| App | Port | Role |
-|-----|------|------|
-| `shell` | 3000 | Host — Header, routing (react-router-dom), consumes remotes |
-| `remote-dashboard` | 3002 | Remote — exposes `./Dashboard` component |
-| `remote-about` | 3003 | Remote — exposes `./About` component |
-
-**Routes (shell):**
-- `/` — Home: Dashboard + About remotes together
-- `/dashboard` — Dashboard remote only
-- `/about` — About remote only
-
-**Request flow at runtime:**
-1. Shell loads → `main.tsx` fires `import('./bootstrap')` (dynamic import)
-2. Module Federation intercepts, fetches `remoteEntry.js` from each remote
-3. Shared module versions are negotiated (react, react-dom as singletons)
-4. Only then does `bootstrap.tsx` execute → `ReactDOM.createRoot()`
-5. When a route renders, `lazy()` triggers the actual component chunk fetch
-
-### Key Patterns
-
-**`main.tsx` → dynamic import is mandatory:**
-The `main.tsx` entry point must use `import('./bootstrap')` (not a static import). This defers execution until Module Federation completes shared-module negotiation. Skipping this causes multiple React instances, breaking hooks.
-
-**Remote lazy imports are centralized in `shell/src/remotes.ts`:**
-Define all `lazy(() => import('remote_*/...'))` calls there and import from pages. Avoids duplicate dynamic import declarations.
-
-**`shared` config — `singleton` type extension:**
-`@originjs/vite-plugin-federation`'s `SharedConfig` omits `singleton`, `eager`, `strictVersion`. Add to each `vite.config.ts` (do not use `as any`):
+**`shared` singleton — `as any` 금지, module augmentation 사용:**
 ```ts
+// 각 vite.config.ts 상단
 declare module '@originjs/vite-plugin-federation' {
-  interface SharedConfig {
-    singleton?: boolean
-    eager?: boolean
-    strictVersion?: boolean
-  }
+  interface SharedConfig { singleton?: boolean; eager?: boolean; strictVersion?: boolean }
 }
 ```
 
-**TypeScript remote module declarations:**
-Remote modules are virtual and unknown to TypeScript. Declare them in `shell/src/types/remote.d.ts`. In production, use `@module-federation/typescript` to auto-generate these from remote apps.
+**TypeScript remote 타입 선언:** `shell/src/types/remote.d.ts`
 
-**CSS imports:**
-Files importing CSS must have `/// <reference types="vite/client" />` in `src/vite-env.d.ts`.
+**Remote lazy import:** `shell/src/remotes.ts` 에 중앙화
 
-**Remote apps cannot use HMR:**
-Remotes must be built and served via `vite preview`. Only the shell can use `vite dev`.
+**CSS import:** `src/vite-env.d.ts` 에 `/// <reference types="vite/client" />` 필요
 
-**All builds must target `esnext`:**
-Module Federation relies on ES modules. Each `vite.config.ts` sets `build.target: 'esnext'`.
+**HMR:** remote는 `build` + `vite preview` 필수. shell만 `vite dev` 가능.
+
+**Build target:** 모든 `vite.config.ts` 에 `build.target: 'esnext'`
