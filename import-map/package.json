@@ -1,0 +1,11 @@
+{
+  "name": "import-map",
+  "private": true,
+  "scripts": {
+    "build:remotes": "pnpm -F remote-dashboard build && pnpm -F remote-about build",
+    "preview:remotes": "pnpm -F remote-dashboard preview & pnpm -F remote-about preview",
+    "build:shell": "pnpm -F shell build",
+    "preview:shell": "pnpm -F shell preview",
+    "start": "pnpm build:remotes && pnpm preview:remotes & pnpm build:shell && pnpm preview:shell"
+  }
+}

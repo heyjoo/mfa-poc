@@ -1,0 +1,17 @@
+.home {
+  min-height: calc(100vh - 60px);
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 2rem;
+}
+
+.loading {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #475569;
+  font-family: monospace;
+  font-size: 0.875rem;
+}
