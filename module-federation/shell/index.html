@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shell - MFA PoC</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!--
+      main.tsx는 bootstrap.tsx를 동적으로 import함.
+      이 패턴이 Module Federation의 핵심:
+      동기 import였다면 shared 모듈 협상 전에 실행되어 에러 발생
+    -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

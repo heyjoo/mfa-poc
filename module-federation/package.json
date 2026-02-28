@@ -1,0 +1,10 @@
+{
+  "name": "mfa-module-federation",
+  "private": true,
+  "scripts": {
+    "build:remotes": "pnpm -F remote-dashboard build && pnpm -F remote-about build",
+    "preview:remotes": "pnpm -F remote-dashboard preview & pnpm -F remote-about preview",
+    "dev:shell": "pnpm -F shell dev",
+    "start": "pnpm build:remotes && pnpm preview:remotes & pnpm dev:shell"
+  }
+}
