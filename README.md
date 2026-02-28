@@ -1,6 +1,6 @@
 # MFA PoC
 
-MFA(Micro Frontend Architecture) 두 가지 구현 방식을 직접 만들어보며 비교하는 학습 프로젝트.
+MFA(Micro Frontend Architecture) 두 가지 구현 방식을 직접 만들어보며 비교한다.
 
 ## 계획
 
@@ -35,7 +35,7 @@ pnpm install
 pnpm start
 ```
 
-### 핵심 학습 포인트
+### NOTE
 
 - **bootstrap 패턴** — `main.tsx`가 `import('./bootstrap')`로 시작하는 이유: MF가 공유 모듈 버전을 협상한 뒤에 React가 뜨도록 보장
 - **singleton 공유** — 여러 remote가 같은 React 인스턴스를 쓰지 않으면 hook이 깨짐
